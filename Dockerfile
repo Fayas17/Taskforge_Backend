@@ -5,12 +5,15 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /install
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && \
+    apt-get install -y build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-RUN pip install --upgrade pip
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /install/wheels -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip wheel --no-cache-dir --no-deps \
+    --wheel-dir /install/wheels -r requirements.txt
 
 
 # -------------------
@@ -26,9 +29,9 @@ ENV PYTHONUNBUFFERED=1
 COPY --from=builder /install/wheels /wheels
 COPY requirements.txt .
 
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache-dir /wheels/* && \
+    rm -rf /wheels
 
 COPY ./app ./app
-COPY .env .env
 
-CMD ["uvicorn", "app.auth_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
