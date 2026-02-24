@@ -26,9 +26,8 @@ def get_db():
         db.close()
 
 
-def create_schema():
+def create_schemas():
     with engine.connect() as connection:
-        connection.execute(
-            text(f"CREATE SCHEMA IF NOT EXISTS {settings.DB_SCHEMA}")
-        )
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS auth"))
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS job"))
         connection.commit()
