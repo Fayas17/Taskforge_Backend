@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: int
     POSTGRES_DB: str
-    DB_SCHEMA: str
 
     # Redis
     REDIS_HOST: str
