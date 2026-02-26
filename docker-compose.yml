@@ -17,6 +17,7 @@ services:
       - "6379:6379"
 
   auth_service:
+    image: taskforge:latest
     build: .
     container_name: taskforge_auth
     command: uvicorn app.auth_service.main:app --host 0.0.0.0 --port 8000 --reload
@@ -31,6 +32,7 @@ services:
       - redis
 
   job_service:
+    image: taskforge:latest
     build: .
     container_name: taskforge_job
     command: uvicorn app.job_service.main:app --host 0.0.0.0 --port 8001 --reload
@@ -45,6 +47,7 @@ services:
       - redis
 
   celery_worker:
+    image: taskforge:latest
     build: .
     command: celery -A app.worker.celery_app worker --loglevel=info
     env_file:
