@@ -1,8 +1,9 @@
 from http.client import HTTPException
 
 from sqlalchemy.orm import Session
-from . import repository
-from utils import hash_password, verify_password, create_access_token
+
+from app.auth_service import repository
+from app.auth_service.utils import hash_password, verify_password, create_access_token
 
 def register_user(db: Session, user_input):
     existing_user = repository.get_user_by_email(db, user_input.email)
