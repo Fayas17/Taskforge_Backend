@@ -8,14 +8,14 @@ from app.auth_service import service, schemas
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register", response_model=schemas.UserResponse)
+@router.post("/register/", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     try:
         return service.register_user(db, user)
     except HTTPException as e:
         raise e
     
-@router.post("/login")
+@router.post("/login/")
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     try:
         access_token = service.login_user(db, user)
