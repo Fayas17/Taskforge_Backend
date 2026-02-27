@@ -19,7 +19,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    refresh_token = relationship("RefreshToken", back_populates="users")
+    refresh_token = relationship("RefreshToken", back_populates="user")
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
@@ -29,5 +29,5 @@ class RefreshToken(Base):
     jti = Column(String, unique=True, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_revoked = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
-    user = relationship("User", back_populates="refresh_tokens")
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    user = relationship("User", back_populates="refresh_token")
