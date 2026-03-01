@@ -37,3 +37,12 @@ def refresh(
     ):
     refresh_token = credentials.credentials
     return service.refresh_user_token(db, refresh_token)
+
+@router.post("/logout/")
+def logout(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+    refresh_token = credentials.credentials
+    return service.logout(db, refresh_token)
+    
