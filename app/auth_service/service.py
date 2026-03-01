@@ -1,9 +1,14 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timedelta
+
+from app.core.config import get_settings
 from app.auth_service import repository
-from app.auth_service.utils import hash_password, verify_password, create_access_token
+from app.auth_service.utils import hash_password, verify_password, create_access_token, create_refresh_token
+
+settings = get_settings()
 
 def register_user(db: Session, user_input):
     existing_user = repository.get_user_by_email(db, user_input.email)
@@ -36,8 +41,28 @@ def login_user(db: Session, user_input):
     access_token = create_access_token(
         {
             "sub": str(user.id),
+            "type": "access",
             "email": user.email
         }
     )
-    
-    return access_token
+
+    refresh_token, jti = create_refresh_token(
+        {
+            "sub": str(user.id),
+            "type": "refresh",
+            "email": user.email
+        }
+    )
+    expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    repository.create_refresh_token(
+        db=db,
+        user_id=user.id,
+        jti=jti,
+        expires_at=expires_at
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    }
