@@ -1,5 +1,4 @@
 from fastapi import HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from sqlalchemy.orm import Session
 
@@ -123,4 +122,26 @@ def refresh_user_token(db: Session, refresh_token: str):
         "refresh_token": new_refresh_token
     }
 
+def logout(db: Session, refresh_token: str):
+    try:
+        payload = jwt.decode(
+            refresh_token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+            )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type")
+    
+    jti = payload.get("jti")
+
+    stored_token = repository.get_refresh_token(db, jti)
+
+    if not stored_token:
+        raise HTTPException(status_code=401, detail="Refresh token revoked or expired")
+
+    repository.revoke_refresh_token(db, jti)    
+    
+    return {"message": "Successfully logged out"}
