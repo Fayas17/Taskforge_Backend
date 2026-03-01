@@ -1,11 +1,14 @@
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 
 from app.auth_service import service, schemas
 from app.auth_service.dependencies import get_current_user
+
+security = HTTPBearer()
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,3 +29,11 @@ def current_user(current_user: schemas.UserResponse = Depends(get_current_user))
         "username": current_user.username,
         "email": current_user.email
     }
+
+@router.post("/refresh/")
+def refresh(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+    refresh_token = credentials.credentials
+    return service.refresh_user_token(db, refresh_token)
