@@ -1,6 +1,9 @@
 from fastapi import HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from sqlalchemy.orm import Session
+
+from jose import jwt, JWTError
 
 from datetime import datetime, timedelta
 
@@ -66,3 +69,58 @@ def login_user(db: Session, user_input):
         "access_token": access_token,
         "refresh_token": refresh_token
     }
+
+def refresh_user_token(db: Session, refresh_token: str):
+    try:
+        payload = jwt.decode(
+            refresh_token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+            )
+        
+    except JWTERROR:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type")
+    
+    jti = payload.get("jti")
+    user_id = payload.get("sub")
+
+    stored_token = repository.get_refresh_token(db, jti)
+
+    if not stored_token:
+        raise HTTPException(status_code=401, detail="Refresh token revoked or expired")
+    
+    repository.revoke_refresh_token(db, jti)
+    
+    new_access_token = create_access_token(
+        {
+            "sub": user_id,
+            "type": "access",
+            "email": payload.get("email")
+        }
+    )
+
+    new_refresh_token, new_jti = create_refresh_token(
+        {
+            "sub": user_id,
+            "type": "refresh",
+            "email": payload.get("email")
+        }
+    )
+
+    new_expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    repository.create_refresh_token(
+        db=db,
+        user_id=user_id,
+        jti=new_jti,
+        expires_at=new_expires_at
+    )
+    
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token
+    }
+
+    
