@@ -77,7 +77,7 @@ def refresh_user_token(db: Session, refresh_token: str):
             algorithms=[settings.ALGORITHM]
             )
         
-    except JWTERROR:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")

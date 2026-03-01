@@ -18,8 +18,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
 @router.post("/login/")
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    access_token = service.login_user(db, user)
-    return {"access_token": access_token}
+    return service.login_user(db, user)
+
 
     
 @router.get("/me/")
