@@ -7,8 +7,8 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 
 from app.core.config import get_settings
-from app.auth_service import repository
-from app.auth_service.utils import hash_password, verify_password, create_access_token, create_refresh_token
+from app.modules.auth import repository
+from app.modules.auth.utils import hash_password, verify_password, create_access_token, create_refresh_token
 
 settings = get_settings()
 

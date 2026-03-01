@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.auth_service import repository
+from app.modules.auth import repository
 from app.core.config import get_settings
 
 settings = get_settings()
