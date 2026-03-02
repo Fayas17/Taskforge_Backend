@@ -1,8 +1,15 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
+
     # App
     APP_NAME: str
     DEBUG: bool
@@ -36,13 +43,10 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
 
 @lru_cache()
 def get_settings():
     return Settings()
+
 
 settings = get_settings()
