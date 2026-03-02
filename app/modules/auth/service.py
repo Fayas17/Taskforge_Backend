@@ -23,6 +23,9 @@ def register_user(db: Session, user_input):
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken")
     
+    if len(user_input.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+
     user_data = {
         "username": user_input.username,
         "email": user_input.email,
