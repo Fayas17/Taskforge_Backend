@@ -1,41 +1,56 @@
-# test logout user
-def test_logout_user(client):
-    response = client.post("/auth/register/", json={
-        "email": "test@example.com",
-        "username": "testuser",
+# Helper function
+def create_and_login_user(client):
+    client.post("/auth/register/", json={
+        "email": "logout@example.com",
+        "username": "logoutuser",
         "password": "test@password123"
     })
+
     login = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": "logout@example.com",
         "password": "test@password123"
     })
+
     return login.json()
 
-def logout_user(client):
-    refresh_token = test_logout_user(client)
 
-    response = client.get("/auth/logout/", headers={
-        "Authorization": f"Bearer {refresh_token}"}
-    )  
+#  Test logout success
+def test_logout_user(client):
+    tokens = create_and_login_user(client)
+    refresh_token = tokens["refresh_token"]
+
+    response = client.post(
+        "/auth/logout/",
+        headers={"Authorization": f"Bearer {refresh_token}"}
+    )
+
     assert response.status_code == 200
 
-#logout with access token
-def logout_user_access_token(client):
-    access_token = test_logout_user(client)
-    response = client.post("/auth/logout/", headers={
-        "Authorization": f"Bearer {access_token}"}
+
+#  Logout using access token should fail
+def test_logout_with_access_token(client):
+    tokens = create_and_login_user(client)
+    access_token = tokens["access_token"]
+
+    response = client.post(
+        "/auth/logout/",
+        headers={"Authorization": f"Bearer {access_token}"}
     )
+
     assert response.status_code == 401
 
-# test logout with invalid token
-def logout_user_invalid_token(client):
 
-    response = client.get("/auth/logout/", headers={
-        "Authorization": "Bearer invalid.token"}
-    )   
+#  Logout with invalid token
+def test_logout_with_invalid_token(client):
+    response = client.post(
+        "/auth/logout/",
+        headers={"Authorization": "Bearer invalid.token"}
+    )
+
     assert response.status_code == 401
 
-# test logout with missing token
-def logout_user_missing_token(client):  
-    response = client.get("/auth/logout/")
-    assert response.status_code == 401
+
+#  Logout with missing token
+def test_logout_with_missing_token(client):
+    response = client.post("/auth/logout/")
+    assert response.status_code in [401, 403]
