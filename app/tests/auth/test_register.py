@@ -1,5 +1,4 @@
-
-
+# user registration test
 def test_register_success(client):
     response = client.post("/auth/register/", json={
         "email": "test@example.com",
@@ -10,3 +9,39 @@ def test_register_success(client):
     assert response.status_code == 200
     assert response.json()["email"] == "test@example.com"
     assert response.json()["username"] == "testuser"
+
+# test duplicate email registration
+def test_register_duplicate_email(client):
+    # First registration should succeed
+    response = client.post("/auth/register/", json={
+        "email": "duplicate@example.com",
+        "username": "duplicateuser",
+        "password": "test@password123"
+    })
+    assert response.status_code == 200
+
+    # Second registration with same email should fail
+    response = client.post("/auth/register/", json={
+        "email": "duplicate@example.com",
+        "username": "anotheruser",
+        "password": "test@password123"
+    })
+    assert response.status_code == 400
+
+# test duplicate invalid email registration
+def test_register_invalid_email(client):
+    response = client.post("/auth/register/", json={
+        "email": "invalid-email",
+        "username": "invalidemailuser",
+        "password": "test@password123"
+    })
+    assert response.status_code == 422
+
+# test weak password registration
+def test_register_weak_password(client):
+    response = client.post("/auth/register/", json={
+        "email": "weak@example.com",
+        "username": "weakuser",
+        "password": "123456"
+    })
+    assert response.status_code == 422
