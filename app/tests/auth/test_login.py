@@ -1,19 +1,25 @@
+import uuid
+
 # test user creation
 def create_user(client):
+    
+    email = f"{uuid.uuid4()}@example.com"
+
     response = client.post("/auth/register/", json={
-        "email": "test@example.com",
+        "email": email,
         "username": "TestUser",
         "password": "test@password123"
     })
     assert response.status_code == 200
-    return response.json()
+    return response.json() ["email"]
+    
 
 # test user login
 def test_login_success(client):
-    create_user(client)
+    email =  create_user(client)
 
     response = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": email,
         "password": "test@password123"
     })
     assert response.status_code == 200
@@ -24,10 +30,10 @@ def test_login_success(client):
 
 # test login with wrong password
 def test_login_wrong_password(client):
-    create_user(client)
+    email = create_user(client)
 
     response = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": email,
         "password": "wrongpassword"
     })
     assert response.status_code == 401

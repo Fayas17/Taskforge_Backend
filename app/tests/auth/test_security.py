@@ -1,12 +1,17 @@
+import uuid
+
 #JWT tampering test
 def test_jwt_tampering(client):
+
+    email = f"{uuid.uuid4()}@example.com"
+
     response = client.post("/auth/register/", json={
-        "email": "test@example.com",
+        "email": email,
         "username": "testuser",
         "password": "test@password123"
     })
     login = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": email,
         "password": "test@password123"
     })
     access_token = login.json()["access_token"]
@@ -19,13 +24,16 @@ def test_jwt_tampering(client):
 
 # access cannot be used to refresh
 def test_access_token_not_refresh(client):
+
+    email = f"{uuid.uuid4()}@example.com"
+
     response = client.post("/auth/register/", json={
-        "email": "test@example.com",
+        "email": email,
         "username": "testuser", 
         "password": "test@password123"
     })
     login = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": email,
         "password": "test@password123"
     })
 

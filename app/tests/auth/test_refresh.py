@@ -1,14 +1,20 @@
+import uuid
+
+
 # create user and login
 def create_and_login(client):
+    
+    email = f"{uuid.uuid4()}@example.com"
+
     response = client.post("/auth/register/", json={
-        "email": "test@example.com",
+        "email": email,
         "username": "TestUser",
         "password": "test@password123"
     })
     assert response.status_code == 200
 
     response = client.post("/auth/login/", json={
-        "email": "test@example.com",
+        "email": email,
         "password": "test@password123"
     })
     assert response.status_code == 200
@@ -35,3 +41,24 @@ def test_refresh_invalid_token(client):
 def test_refresh_missing_token(client):
     response = client.post("/auth/refresh/")
     assert response.status_code == 401
+
+# test refresh token rotation
+def test_refresh_token_rotation(client):
+    tokens = create_and_login(client)
+    refresh_token = tokens["refresh_token"]
+
+    # First refresh
+    first_refresh = client.post(
+        "/auth/refresh/",
+        headers={"Authorization": f"Bearer {refresh_token}"}
+    )
+
+    assert first_refresh.status_code == 200
+
+    # Try using OLD refresh token again
+    second_refresh = client.post(
+        "/auth/refresh/",
+        headers={"Authorization": f"Bearer {refresh_token}"}
+    )
+
+    assert second_refresh.status_code == 401

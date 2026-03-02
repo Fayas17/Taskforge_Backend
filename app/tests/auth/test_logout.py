@@ -1,13 +1,18 @@
+import uuid
+
 # Helper function
 def create_and_login_user(client):
+
+    email = f"{uuid.uuid4()}@example.com"
+
     client.post("/auth/register/", json={
-        "email": "logout@example.com",
+        "email": email,
         "username": "logoutuser",
         "password": "test@password123"
     })
 
     login = client.post("/auth/login/", json={
-        "email": "logout@example.com",
+        "email": email,
         "password": "test@password123"
     })
 
