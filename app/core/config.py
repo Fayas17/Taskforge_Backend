@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     APP_NAME: str
     DEBUG: bool
 
+    # CORS
+    CORS_ORIGINS: str
+
     # Database
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
