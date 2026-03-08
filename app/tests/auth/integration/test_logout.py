@@ -16,7 +16,10 @@ def create_and_login_user(client):
         "password": "test@password123"
     })
 
-    return login.json()
+    return {
+        "access_token": login.cookies.get("access_token"),
+        "refresh_token": login.cookies.get("refresh_token")
+    }
 
 
 #  Test logout success
@@ -25,9 +28,8 @@ def test_logout_user(client):
     refresh_token = tokens["refresh_token"]
 
     response = client.post(
-        "/auth/logout/",
-        headers={"Authorization": f"Bearer {refresh_token}"}
-    )
+        "/auth/logout/"
+        )
 
     assert response.status_code == 200
 
@@ -37,10 +39,11 @@ def test_logout_with_access_token(client):
     tokens = create_and_login_user(client)
     access_token = tokens["access_token"]
 
+    client.cookies.set("refresh_token",tokens["access_token"])
+
     response = client.post(
-        "/auth/logout/",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
+        "/auth/logout/"
+        )
 
     assert response.status_code == 401
 

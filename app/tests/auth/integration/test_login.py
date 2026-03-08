@@ -23,10 +23,11 @@ def test_login_success(client):
         "password": "test@password123"
     })
     assert response.status_code == 200
-    data = response.json()
+    access_token = response.cookies.get("access_token")
+    refresh_token = response.cookies.get("refresh_token")
 
-    assert "access_token" in data
-    assert "refresh_token" in data
+    assert access_token is not None
+    assert refresh_token is not None
 
 # test login with wrong password
 def test_login_wrong_password(client):

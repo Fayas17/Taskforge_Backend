@@ -14,12 +14,12 @@ def test_jwt_tampering(client):
         "email": email,
         "password": "test@password123"
     })
-    access_token = login.json()["access_token"]
+    access_token = login.cookies.get("access_token")
     tampered_token = access_token + "sanvdsdvdsfj"
 
-    response = client.get("/auth/me/", headers={
-        "Authorization": f"Bearer {tampered_token}"}
-    )  
+    client.cookies.set("access_token",tampered_token)
+
+    response = client.get("/auth/me/")  
     assert response.status_code == 401
 
 # access cannot be used to refresh
@@ -37,10 +37,10 @@ def test_access_token_not_refresh(client):
         "password": "test@password123"
     })
 
-    access_token = login.json()["access_token"]
+    access_token = login.cookies.get("access_token")
 
-    response = client.post("/auth/refresh/", headers={
-        "Authorization": f"Bearer {access_token}"}
-    )
+    client.cookies.set("refresh_token",access_token)
+
+    response = client.post("/auth/refresh/")
     assert response.status_code == 401
 

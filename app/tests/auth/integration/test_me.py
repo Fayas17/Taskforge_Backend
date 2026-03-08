@@ -17,15 +17,14 @@ def create_and_login_access(client):
         "password": "test@password123"
     })
     assert response.status_code == 200
-    return response.json()["access_token"], email
+    access_token = response.cookies.get("access_token")
+    return  access_token, email
 
 # test get current user
 def test_get_current_user(client):
     access_token, email = create_and_login_access(client)
-
-    response = client.get("/auth/me/", headers={
-        "Authorization": f"Bearer {access_token}"}
-    )
+    
+    response = client.get("/auth/me/")
     assert response.status_code == 200
     data = response.json()
 
@@ -33,9 +32,7 @@ def test_get_current_user(client):
 
 # test get current user with invalid token
 def test_get_current_user_invalid_token(client):
-    response = client.get("/auth/me/", headers={
-        "Authorization": "Bearer invalid.token"}
-    )
+    response = client.get("/auth/me/")
     assert response.status_code == 401
 
 # test get current user with missing token

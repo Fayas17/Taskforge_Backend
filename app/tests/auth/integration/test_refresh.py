@@ -18,18 +18,23 @@ def create_and_login(client):
         "password": "test@password123"
     })
     assert response.status_code == 200
-    return response.json()
+    return {
+        "access_token": response.cookies.get("access_token"),
+        "refresh_token": response.cookies.get("refresh_token")
+    }
 
 # test refresh token success
 def test_refresh_success(client):
     tokens = create_and_login(client)
 
-    response = client.post("/auth/refresh/", headers={
-        "Authorization": f"Bearer {tokens['refresh_token']}"}
-    )
+    response = client.post("/auth/refresh/")
     assert response.status_code == 200
-    assert "access_token" in response.json()
-    assert "refresh_token" in response.json()
+
+    access_token = response.cookies.get("access_token")
+    refresh_token = response.cookies.get("refresh_token")
+
+    assert access_token is not None
+    assert refresh_token is not None
 
 # test refresh with invalid token
 def test_refresh_invalid_token(client):
@@ -45,20 +50,13 @@ def test_refresh_missing_token(client):
 # test refresh token rotation
 def test_refresh_token_rotation(client):
     tokens = create_and_login(client)
-    refresh_token = tokens["refresh_token"]
+    old_refresh = tokens["refresh_token"]
 
-    # First refresh
-    first_refresh = client.post(
-        "/auth/refresh/",
-        headers={"Authorization": f"Bearer {refresh_token}"}
-    )
+    first = client.post("/auth/refresh/")
+    assert first.status_code == 200
 
-    assert first_refresh.status_code == 200
+    # restore old refresh token
+    client.cookies.set("refresh_token", old_refresh)
 
-    # Try using OLD refresh token again
-    second_refresh = client.post(
-        "/auth/refresh/",
-        headers={"Authorization": f"Bearer {refresh_token}"}
-    )
-
-    assert second_refresh.status_code == 401
+    second = client.post("/auth/refresh/")
+    assert second.status_code == 401
