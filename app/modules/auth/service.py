@@ -13,15 +13,16 @@ from app.modules.auth.utils import hash_password, verify_password, create_access
 settings = get_settings()
 
 def register_user(db: Session, user_input):
+    existing_user = repository.get_user_by_username(db, user_input.username)
+    
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
     existing_user = repository.get_user_by_email(db, user_input.email)
     
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    existing_user = repository.get_user_by_username(db, user_input.username)
-    
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already taken")
     
     if len(user_input.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
@@ -70,7 +71,7 @@ def login_user(db: Session, user_input):
     return {
         "access_token": access_token,
         "refresh_token": refresh_token
-    }
+}
 
 def refresh_user_token(db: Session, refresh_token: str):
     try:
