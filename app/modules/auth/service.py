@@ -23,7 +23,6 @@ def register_user(db: Session, user_input):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    
     if len(user_input.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
 
@@ -72,6 +71,41 @@ def login_user(db: Session, user_input):
         "access_token": access_token,
         "refresh_token": refresh_token
 }
+
+#Google OAuth access and refresh
+def login_user_auth(db: Session, user):
+
+    access_token = create_access_token(
+        {
+
+            "sub": str(user.id),
+            "type": "access",
+            "email": user.email
+        }
+    )
+
+    refresh_token, jti = create_refresh_token(
+        {
+
+            "sub": str(user.id),
+            "type": "refresh",
+            "email": user.email
+
+        }
+    )
+    expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    repository.create_refresh_token(
+        db=db,
+        user_id=user.id,
+        jti=jti,
+        expires_at=expires_at
+    )
+
+    return{
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    }
 
 def refresh_user_token(db: Session, refresh_token: str):
     try:

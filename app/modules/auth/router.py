@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, Response, Request, HTTPException
+from fastapi.responses import RedirectResponse 
 
 from sqlalchemy.orm import Session
 
+from app.modules.auth import repository
 from app.core.database import get_db
 from app.modules.auth import service, schemas
 from app.modules.auth.dependencies import get_current_user
+from app.core.oauth import oauth
 
 router = APIRouter()
 
@@ -30,6 +33,49 @@ def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get
 
     return {"message": "Login successful"}
 
+@router.get("/google/login/")
+async def google_login(request: Request):
+    redirect_uri = request.url_for("google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@router.get("/google/callback/", name="google_callback")
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+
+    userinfo = token["userinfo"]
+
+    email = userinfo["email"]
+    username = userinfo["name"]
+
+    user = repository.get_user_by_email(db, email)
+
+    if not user:
+        user = repository.create_user(
+            db,
+            {
+
+                "username":username,
+                "email":email,
+                "hashed_password": None
+            }
+        )
+
+    tokens = service.login_user_auth(db, user)
+
+    response = RedirectResponse(url="http://localhost:5173/dashboard")
+
+    response.set_cookie(
+        key="access_token",
+        value=tokens["access_token"],
+        path="/"
+        )
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        path="/auth"
+    )
+
+    return response
 
     
 @router.get("/me/")
