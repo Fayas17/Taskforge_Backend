@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import get_settings
 from app.modules.auth.router import router as auth_router
@@ -24,7 +24,12 @@ app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 # app.include_router(jobs_router, prefix="/jobs", tags=["Jobs"])
 
 
-origins = [settings.CORS_ORIGINS]
+origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY
+)
 
 app.add_middleware(
     CORSMiddleware,
