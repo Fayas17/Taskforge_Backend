@@ -44,7 +44,9 @@ class Settings(BaseSettings):
     # Cookies
     COOKIE_SECURE: bool
     HTTP_ONLY: bool
-    COOKIE_SAMESITE: str 
+    COOKIE_SAMESITE: str
+    ACCESS_TOKEN_COOKIE_MAX_AGE: int
+    REFRESH_TOKEN_COOKIE_MAX_AGE: int 
 
     # GOOGLE OAuth
     GOOGLE_CLIENT_ID: str
