@@ -7,9 +7,12 @@ from app.modules.auth import repository
 from app.core.database import get_db
 from app.modules.auth import service, schemas
 from app.modules.auth.dependencies import get_current_user
+from app.core.config import get_settings
 from app.core.oauth import oauth
 
 router = APIRouter()
+
+settings = get_settings()
 
 @router.post("/register/", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -22,12 +25,18 @@ def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get
     response.set_cookie(
         key="access_token",
         value=tokens["access_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/"
     )
 
     response.set_cookie(
         key="refresh_token",
         value=tokens["refresh_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/auth"
     )
 
@@ -62,16 +71,22 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
     tokens = service.login_user_auth(db, user)
 
-    response = RedirectResponse(url="http://localhost:5173/dashboard")
+    response = RedirectResponse(url=f"{settings.FRONTEND_URL}/dashboard")
 
     response.set_cookie(
         key="access_token",
         value=tokens["access_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/"
         )
     response.set_cookie(
         key="refresh_token",
         value=tokens["refresh_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/auth"
     )
 
@@ -102,12 +117,18 @@ def refresh(
 
     response.set_cookie(
         key="access_token",
-        value=tokens["access_token"] ,
+        value=tokens["access_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/"
     )
     response.set_cookie(
         key="refresh_token",
         value=tokens["refresh_token"],
+        httponly=settings.HTTP_ONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
         path="/auth"
     )
 

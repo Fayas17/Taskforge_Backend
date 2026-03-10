@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str
 
+    # Frontend Url
+    FRONTEND_URL: str
+
     # Database
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -37,6 +40,11 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
+
+    # Cookies
+    COOKIE_SECURE: bool
+    HTTP_ONLY: bool
+    COOKIE_SAMESITE: str 
 
     # GOOGLE OAuth
     GOOGLE_CLIENT_ID: str
