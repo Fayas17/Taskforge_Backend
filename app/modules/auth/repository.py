@@ -21,26 +21,29 @@ def create_user(db: Session, user_data: dict):
     db.refresh(user)
     return user
 
-def create_refresh_token(db: Session, user_id: UUID, jti: str, expires_at):
+def create_refresh_token(db: Session, user_id: UUID, jti_hash: str, expires_at, device, ip_address, user_agent):
     refresh_token = RefreshToken(
         user_id=user_id,
-        jti=jti,
-        expires_at=expires_at
+        jti_hash=jti_hash,
+        expires_at=expires_at,
+        device=device,
+        ip_address=ip_address,
+        user_agent=user_agent
     )
     db.add(refresh_token)
     db.commit()
     db.refresh(refresh_token)
     return refresh_token
 
-def get_refresh_token(db: Session, jti: str):
+def get_refresh_token(db: Session, jti_hash: str):
     return db.query(RefreshToken).filter(
-        RefreshToken.jti == jti,
+        RefreshToken.jti_hash == jti_hash,
         RefreshToken.is_revoked == False,
         RefreshToken.expires_at > datetime.utcnow()
         ).first()
 
-def revoke_refresh_token(db: Session, jti: str):    
-    token = db.query(RefreshToken).filter(RefreshToken.jti == jti).first()
+def revoke_refresh_token(db: Session, jti_hash: str):    
+    token = db.query(RefreshToken).filter(RefreshToken.jti_hash == jti_hash, RefreshToken.is_revoked == False).first()
     if token:
         token.is_revoked = True
         db.commit()

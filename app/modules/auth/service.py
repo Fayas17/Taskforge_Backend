@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from app.core.config import get_settings
 from app.modules.auth import repository
-from app.modules.auth.utils import hash_password, verify_password, create_access_token, create_refresh_token
+from app.modules.auth.utils import hash_password, verify_password, hash_jti, create_access_token, create_refresh_token
 
 settings = get_settings()
 
@@ -34,7 +34,7 @@ def register_user(db: Session, user_input):
 
     return repository.create_user(db, user_data)
 
-def login_user(db: Session, user_input):
+def login_user(db: Session, user_input, request):
     user = repository.get_user_by_email(db, user_input.email)
     
     if not user:
@@ -43,6 +43,10 @@ def login_user(db: Session, user_input):
     if not verify_password(user_input.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    ip_address = request.client.host
+    user_agent = request.headers.get("user-agent")
+    device = user_agent
+    
     access_token = create_access_token(
         {
             "sub": str(user.id),
@@ -63,8 +67,11 @@ def login_user(db: Session, user_input):
     repository.create_refresh_token(
         db=db,
         user_id=user.id,
-        jti=jti,
-        expires_at=expires_at
+        jti_hash=hash_jti(jti),
+        expires_at=expires_at,
+        device=device,
+        ip_address=ip_address,
+        user_agent=user_agent
     )
 
     return {
@@ -73,7 +80,11 @@ def login_user(db: Session, user_input):
 }
 
 #Google OAuth access and refresh
-def login_user_auth(db: Session, user):
+def login_user_auth(db: Session, user, request):
+
+    ip_address = request.client.host
+    user_agent = request.headers.get("user-agent")
+    device = user_agent
 
     access_token = create_access_token(
         {
@@ -98,8 +109,11 @@ def login_user_auth(db: Session, user):
     repository.create_refresh_token(
         db=db,
         user_id=user.id,
-        jti=jti,
-        expires_at=expires_at
+        jti_hash=hash_jti(jti),
+        expires_at=expires_at,
+        device=device,
+        ip_address=ip_address,
+        user_agent=user_agent
     )
 
     return{
@@ -107,29 +121,36 @@ def login_user_auth(db: Session, user):
         "refresh_token": refresh_token
     }
 
-def refresh_user_token(db: Session, refresh_token: str):
+def refresh_user_token(db: Session, refresh_token: str, request):
     try:
         payload = jwt.decode(
             refresh_token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM]
-            )
-        
+        )
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")
-    
+
     jti = payload.get("jti")
     user_id = payload.get("sub")
 
-    stored_token = repository.get_refresh_token(db, jti)
+    jti_hash = hash_jti(jti)
+
+    stored_token = repository.get_refresh_token(db, jti_hash)
 
     if not stored_token:
         raise HTTPException(status_code=401, detail="Refresh token revoked or expired")
-    
-    repository.revoke_refresh_token(db, jti)
-    
+
+    # revoke old refresh token
+    repository.revoke_refresh_token(db, jti_hash)
+
+    ip_address = request.client.host
+    user_agent = request.headers.get("user-agent")
+    device = user_agent
+
     new_access_token = create_access_token(
         {
             "sub": user_id,
@@ -151,10 +172,13 @@ def refresh_user_token(db: Session, refresh_token: str):
     repository.create_refresh_token(
         db=db,
         user_id=user_id,
-        jti=new_jti,
-        expires_at=new_expires_at
+        jti_hash=hash_jti(new_jti),
+        expires_at=new_expires_at,
+        device=device,
+        ip_address=ip_address,
+        user_agent=user_agent
     )
-    
+
     return {
         "access_token": new_access_token,
         "refresh_token": new_refresh_token
@@ -173,13 +197,13 @@ def logout(db: Session, refresh_token: str):
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")
     
-    jti = payload.get("jti")
+    jti_hash = hash_jti(payload.get("jti"))
 
-    stored_token = repository.get_refresh_token(db, jti)
+    stored_token = repository.get_refresh_token(db, jti_hash)
 
     if not stored_token:
         raise HTTPException(status_code=401, detail="Refresh token revoked or expired")
 
-    repository.revoke_refresh_token(db, jti)    
+    repository.revoke_refresh_token(db, jti_hash)    
     
     return {"message": "Successfully logged out"}

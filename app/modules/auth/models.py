@@ -28,8 +28,12 @@ class RefreshToken(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"))
-    jti = Column(String, unique=True, nullable=False)
+    jti_hash = Column(String, unique=True, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_revoked = Column(Boolean, default=False)
+    device = Column(String)
+    ip_address = Column(String)
+    user_agent = Column(String)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     user = relationship("User", back_populates="refresh_token")

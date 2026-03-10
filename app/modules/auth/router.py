@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, Response, Request, HTTPException
-from fastapi.responses import RedirectResponse 
+from fastapi import APIRouter, Depends, Response, Request, HTTPException 
 
 from sqlalchemy.orm import Session
+
+from authlib.jose.errors import ExpiredTokenError
+from authlib.integrations.base_client.errors import OAuthError
+from starlette.responses import RedirectResponse
+
 
 from app.modules.auth import repository
 from app.core.database import get_db
@@ -19,8 +23,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return service.register_user(db, user)
     
 @router.post("/login/")
-def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
-    tokens = service.login_user(db, user)
+def login(user: schemas.UserLogin, response: Response, request: Request, db: Session = Depends(get_db)):
+    tokens = service.login_user(db, user, request)
 
     response.set_cookie(
         key="access_token",
@@ -28,6 +32,7 @@ def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.ACCESS_TOKEN_COOKIE_MAX_AGE,
         path="/"
     )
 
@@ -37,6 +42,7 @@ def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.REFRESH_TOKEN_COOKIE_MAX_AGE,
         path="/auth"
     )
 
@@ -49,9 +55,22 @@ async def google_login(request: Request):
 
 @router.get("/google/callback/", name="google_callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
 
-    userinfo = token["userinfo"]
+    try:
+        token = await oauth.google.authorize_access_token(request)
+
+    except ExpiredTokenError:
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}?error=time_sync_issue"
+        )
+        
+    except OAuthError as e:
+        return RedirectResponse(url=settings.FRONTEND_URL)
+
+    userinfo = token.get("userinfo")
+    
+    if not userinfo:
+        return RedirectResponse(url=settings.FRONTEND_URL)
 
     email = userinfo["email"]
     username = userinfo["name"]
@@ -62,16 +81,17 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         user = repository.create_user(
             db,
             {
-
-                "username":username,
-                "email":email,
+                "username": username,
+                "email": email,
                 "hashed_password": None
             }
         )
 
-    tokens = service.login_user_auth(db, user)
+    tokens = service.login_user_auth(db, user, request)
 
-    response = RedirectResponse(url=f"{settings.FRONTEND_URL}/dashboard")
+    response = RedirectResponse(
+        url=f"{settings.FRONTEND_URL}/dashboard?login_success=true"
+    )
 
     response.set_cookie(
         key="access_token",
@@ -79,18 +99,22 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.ACCESS_TOKEN_COOKIE_MAX_AGE,
         path="/"
-        )
+    )
+
     response.set_cookie(
         key="refresh_token",
         value=tokens["refresh_token"],
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.REFRESH_TOKEN_COOKIE_MAX_AGE,
         path="/auth"
     )
 
     return response
+
 
     
 @router.get("/me/")
@@ -113,7 +137,7 @@ def refresh(
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token is missing")
     
-    tokens = service.refresh_user_token(db, refresh_token)
+    tokens = service.refresh_user_token(db, refresh_token, request)
 
     response.set_cookie(
         key="access_token",
@@ -121,6 +145,7 @@ def refresh(
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.ACCESS_TOKEN_COOKIE_MAX_AGE,
         path="/"
     )
     response.set_cookie(
@@ -129,6 +154,7 @@ def refresh(
         httponly=settings.HTTP_ONLY,
         secure=settings.COOKIE_SECURE,
         samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.REFRESH_TOKEN_COOKIE_MAX_AGE,
         path="/auth"
     )
 

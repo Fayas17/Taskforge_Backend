@@ -1,7 +1,10 @@
 import uuid
+import hashlib
+
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
+
 from app.core.config import get_settings
 
 
@@ -14,6 +17,9 @@ def hash_password(password: str):
 
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
+
+def hash_jti(jti: str):
+    return hashlib.sha256(jti.encode()).hexdigest()
 
 def create_access_token(data: dict):
     to_encode = data.copy()
