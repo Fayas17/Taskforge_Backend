@@ -25,3 +25,5 @@ authlib
 
 itsdangerous
 alembic
+
+slowapi
