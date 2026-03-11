@@ -27,3 +27,5 @@ itsdangerous
 alembic
 
 slowapi
+
+redis
