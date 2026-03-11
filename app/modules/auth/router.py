@@ -6,23 +6,25 @@ from authlib.jose.errors import ExpiredTokenError
 from authlib.integrations.base_client.errors import OAuthError
 from starlette.responses import RedirectResponse
 
-
 from app.modules.auth import repository
 from app.core.database import get_db
 from app.modules.auth import service, schemas
 from app.modules.auth.dependencies import get_current_user
 from app.core.config import get_settings
 from app.core.oauth import oauth
+from app.core.rate_limiter import limiter
 
 router = APIRouter()
 
 settings = get_settings()
 
 @router.post("/register/", response_model=schemas.UserResponse)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def register(user: schemas.UserCreate, request:Request, db: Session = Depends(get_db)):
     return service.register_user(db, user)
     
 @router.post("/login/")
+@limiter.limit("5/minute")
 def login(user: schemas.UserLogin, response: Response, request: Request, db: Session = Depends(get_db)):
     tokens = service.login_user(db, user, request)
 
@@ -49,6 +51,7 @@ def login(user: schemas.UserLogin, response: Response, request: Request, db: Ses
     return {"message": "Login successful"}
 
 @router.get("/google/login/")
+@limiter.limit("5/minute")
 async def google_login(request: Request):
     redirect_uri = request.url_for("google_callback")
     return await oauth.google.authorize_redirect(request, redirect_uri)
@@ -127,6 +130,7 @@ def current_user(current_user: schemas.UserResponse = Depends(get_current_user))
     }
 
 @router.post("/refresh/")
+@limiter.limit("10/minute")
 def refresh(
     request: Request,
     response: Response,

@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     # Redis
+    REDIS_URL: str
     REDIS_HOST: str
     REDIS_PORT: int
 
