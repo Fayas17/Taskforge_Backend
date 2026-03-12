@@ -29,3 +29,5 @@ alembic
 slowapi
 
 redis
+
+structlog
