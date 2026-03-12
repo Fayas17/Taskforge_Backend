@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
+    # Rate Limits
+    RATE_LIMIT_REGISTER: str = "3/minute"
+    RATE_LIMIT_LOGIN: str = "5/minute"
+    RATE_LIMIT_REFRESH: str = "10/minute"
+
     # Cookies
     COOKIE_SECURE: bool
     HTTP_ONLY: bool
