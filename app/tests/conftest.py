@@ -1,10 +1,19 @@
 import os
 import pytest
+
+# MNC Best Practice: Isolate tests from production infrastructure
+# Set this BEFORE any app imports so the rate limiter picks it up immediately.
+os.environ["REDIS_URL"] = "memory://"
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.core.database import Base, get_db
+from app.core.rate_limiter import limiter
+
+# Disable rate limiting for testing by default
+limiter.enabled = False
 
 
 TEST_DATABASE_URL = (
@@ -15,7 +24,12 @@ TEST_DATABASE_URL = (
     f"{os.getenv('TEST_POSTGRES_DB')}"
 )
 
-engine = create_engine(TEST_DATABASE_URL)
+engine = create_engine(
+    TEST_DATABASE_URL,
+    pool_size=20,
+    max_overflow=10,
+    pool_timeout=30
+)
 
 TestingSessionLocal = sessionmaker(
     autocommit=False,
