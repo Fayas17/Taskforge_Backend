@@ -16,10 +16,11 @@ from app.modules.auth.utils import hash_password, verify_password, hash_jti, cre
 settings = get_settings()
 
 logger = structlog.get_logger()
+security_logger = structlog.get_logger("security")
 
 def register_user(db: Session, user_input):
     
-    logger.info(
+    security_logger.info(
         "register_attempt",
         username=user_input.username,
         email=user_input.email
@@ -28,7 +29,7 @@ def register_user(db: Session, user_input):
     existing_user = repository.get_user_by_username(db, user_input.username)
     
     if existing_user:
-        logger.warning(
+        security_logger.warning(
             "register_failed_username_taken",
             username=user_input.username
         )
@@ -37,14 +38,14 @@ def register_user(db: Session, user_input):
     existing_user = repository.get_user_by_email(db, user_input.email)
     
     if existing_user:
-        logger.warning(
+        security_logger.warning(
             "register_failed_email_taken",
             username=user_input.username
         )
         raise HTTPException(status_code=400, detail="Email already registered")
     
     if len(user_input.password) < 8:
-        logger.warning(
+        security_logger.warning(
             "register_failed_password_policy",
             email=user_input.email
         )
@@ -66,7 +67,7 @@ def login_user(db: Session, user_input, request):
     
     email = user_input.email
 
-    logger.info(
+    security_logger.info(
         "login_attempt",
         email=email
     )
@@ -74,14 +75,14 @@ def login_user(db: Session, user_input, request):
     user = repository.get_user_by_email(db, user_input.email)
     
     if not user:
-        logger.warning(
+        security_logger.warning(
             "login_failed_user_not_found",
             email=email
         )
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     if not verify_password(user_input.password, user.hashed_password):
-        logger.warning(
+        security_logger.warning(
             "login_faile_invalid_password",
             user_id=user.id,
             email=email
@@ -119,7 +120,7 @@ def login_user(db: Session, user_input, request):
         user_agent=user_agent
     )
     
-    logger.info(
+    security_logger.info(
         "login_success",
         user_id=user.id,
         ip=ip_address,
@@ -168,7 +169,7 @@ def login_user_auth(db: Session, user, request):
         user_agent=user_agent
     )
     
-    logger.info(
+    security_logger.info(
         "oauth_login_success",
         user_id=user.id,
         ip=ip_address,
@@ -206,7 +207,7 @@ def refresh_user_token(db: Session, refresh_token: str, request):
     stored_token = repository.get_refresh_token(db, jti_hash)
 
     if not stored_token:
-        logger.warning(
+        security_logger.warning(
             "refresh_token_revoked_or_missing",
             user_id=user_id
         )

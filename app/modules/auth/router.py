@@ -21,6 +21,7 @@ router = APIRouter()
 settings = get_settings()
 
 logger = structlog.get_logger()
+security_logger = structlog.get_logger("security")
 
 @router.post("/register/", response_model=schemas.UserResponse)
 @limiter.limit(settings.RATE_LIMIT_REGISTER)
@@ -28,7 +29,7 @@ def register(user: schemas.UserCreate, request:Request, db: Session = Depends(ge
     
     ip = request.client.host
 
-    logger.info(
+    security_logger.info(
         "register_endpoint_called",
         email=user.email,
         username=user.username,
@@ -43,7 +44,7 @@ def login(user: schemas.UserLogin, response: Response, request: Request, db: Ses
     
     ip = request.client.host
 
-    logger.info(
+    security_logger.info(
         "login_endpoint_called",
         email=user.email,
         ip_address=ip
@@ -71,7 +72,7 @@ def login(user: schemas.UserLogin, response: Response, request: Request, db: Ses
         path="/auth"
     )
     
-    logger.info(
+    security_logger.info(
         "login_success_cookie_set",
         email=user.email,
         ip_address=ip
@@ -83,7 +84,7 @@ def login(user: schemas.UserLogin, response: Response, request: Request, db: Ses
 @limiter.limit("5/minute")
 async def google_login(request: Request):
     
-    logger.info(
+    security_logger.info(
         "google_login_redirect",
         ip_address=request.client.host
     )
@@ -102,25 +103,25 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         token = await oauth.google.authorize_access_token(request)
 
     except ExpiredTokenError:
-        logger.warning("google_token_expired", ip_address=ip)
+        security_logger.warning("google_token_expired", ip_address=ip)
         return RedirectResponse(
             url=f"{settings.FRONTEND_URL}?error=time_sync_issue"
         )
         
     except OAuthError as e:
-        logger.error("google_oauth_error", ip_address=ip)
+        security_logger.error("google_oauth_error", ip_address=ip)
         return RedirectResponse(url=settings.FRONTEND_URL)
 
     userinfo = token.get("userinfo")
     
     if not userinfo:
-        logger.warning("google_userinfo_missing", ip_address=ip)
+        security_logger.warning("google_userinfo_missing", ip_address=ip)
         return RedirectResponse(url=settings.FRONTEND_URL)
 
     email = userinfo["email"]
     username = userinfo["name"]
     
-    logger.info(
+    security_logger.info(
         "google_user_authenticated",
         email=email,
         username=username,
@@ -166,7 +167,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         path="/auth"
     )
     
-    logger.info(
+    security_logger.info(
         "google_login_success",
         email=email,
         ip_address=ip
@@ -206,7 +207,7 @@ def refresh(
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
-        logger.warning("refresh_token_missing", ip_address=ip)
+        security_logger.warning("refresh_token_missing", ip_address=ip)
         raise HTTPException(status_code=401, detail="Refresh token is missing")
     
     tokens = service.refresh_user_token(db, refresh_token, request)
@@ -230,7 +231,7 @@ def refresh(
         path="/auth"
     )
 
-    logger.info("token_refresh_success", ip_address=ip)
+    security_logger.info("token_refresh_success", ip_address=ip)
     
     return {"message":"Token refreshed"}
 
@@ -243,12 +244,12 @@ def logout(
     
     ip = request.client.host
 
-    logger.info("logout_endpoint_called", ip_address=ip)
+    security_logger.info("logout_endpoint_called", ip_address=ip)
     
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
-        logger.warning("logout_missing_refresh_token", ip_address=ip)
+        security_logger.warning("logout_missing_refresh_token", ip_address=ip)
         raise HTTPException(status_code=401, detail="refrsh token missing")
     
     service.logout(db, refresh_token)
@@ -256,6 +257,6 @@ def logout(
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/auth")
 
-    logger.info("logout_success", ip_address=ip)
+    security_logger.info("logout_success", ip_address=ip)
     
     return {"message":"Logout successfully"}

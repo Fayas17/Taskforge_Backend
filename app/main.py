@@ -5,7 +5,6 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.logging import setup_logging
 
-# Initialize logging at the very start
 setup_logging()
 
 from slowapi.middleware import SlowAPIMiddleware

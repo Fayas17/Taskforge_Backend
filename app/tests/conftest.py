@@ -1,8 +1,6 @@
 import os
 import pytest
 
-# MNC Best Practice: Isolate tests from production infrastructure
-# Set this BEFORE any app imports so the rate limiter picks it up immediately.
 os.environ["REDIS_URL"] = "memory://"
 
 from sqlalchemy import create_engine, text
