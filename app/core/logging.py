@@ -1,10 +1,12 @@
 import logging
-import sys
-import structlog
 import os
+import sys
 from logging.handlers import TimedRotatingFileHandler
 
-def setup_logging():
+import structlog
+
+
+def setup_logging() -> None:
     log_dir = "logs"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -45,8 +47,8 @@ def setup_logging():
     security_logger = logging.getLogger("security")
     security_logger.setLevel(logging.INFO)
     security_logger.addHandler(security_handler)
-    security_logger.addHandler(error_handler) # High-priority security issues in error.log too
-    security_logger.propagate = False # Don't duplicate in app.log
+    security_logger.addHandler(error_handler)  # High-priority security issues in error.log too
+    security_logger.propagate = False  # Don't duplicate in app.log
 
     # 4. Structlog Configuration
     structlog.configure(
@@ -56,10 +58,9 @@ def setup_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer()
+            structlog.processors.JSONRenderer(),
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-    
