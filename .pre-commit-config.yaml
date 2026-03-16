@@ -14,9 +14,11 @@ repos:
       - id: mypy
         additional_dependencies:
           - pydantic>=2.0
+          - pydantic-settings>=2.0
           - sqlalchemy>=2.0
           - fastapi>=0.100
-        args: [--ignore-missing-imports]
+          - python-jose>=3.0
+          - structlog
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
