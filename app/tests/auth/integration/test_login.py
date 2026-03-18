@@ -1,44 +1,39 @@
 import uuid
 
+import httpx
 
-# test user creation
-def create_user(client):
+
+async def _create_user(client: httpx.AsyncClient) -> str:
     email = f"{uuid.uuid4()}@example.com"
-
-    response = client.post(
+    response = await client.post(
         "/auth/register/",
         json={"email": email, "username": "TestUser", "password": "test@password123"},
     )
     assert response.status_code == 200
-    return response.json()["email"]
+    return str(response.json()["email"])
 
 
-# test user login
-def test_login_success(client):
-    email = create_user(client)
+async def test_login_success(client: httpx.AsyncClient) -> None:
+    email = await _create_user(client)
 
-    response = client.post("/auth/login/", json={"email": email, "password": "test@password123"})
+    response = await client.post(
+        "/auth/login/", json={"email": email, "password": "test@password123"}
+    )
     assert response.status_code == 200
-    access_token = response.cookies.get("access_token")
-    refresh_token = response.cookies.get("refresh_token")
-
-    assert access_token is not None
-    assert refresh_token is not None
+    assert response.cookies.get("access_token") is not None
+    assert response.cookies.get("refresh_token") is not None
 
 
-# test login with wrong password
-def test_login_wrong_password(client):
-    email = create_user(client)
+async def test_login_wrong_password(client: httpx.AsyncClient) -> None:
+    email = await _create_user(client)
 
-    response = client.post("/auth/login/", json={"email": email, "password": "wrongpassword"})
+    response = await client.post("/auth/login/", json={"email": email, "password": "wrongpassword"})
     assert response.status_code == 401
 
 
-# test login with non-existent user
-def test_login_non_user(client):
-    create_user(client)
-
-    response = client.post(
-        "/auth/login/", json={"email": "nonexistent@example.com", "password": "test@password123"}
+async def test_login_non_user(client: httpx.AsyncClient) -> None:
+    response = await client.post(
+        "/auth/login/",
+        json={"email": "nonexistent@example.com", "password": "test@password123"},
     )
     assert response.status_code == 401
