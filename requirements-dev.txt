@@ -10,4 +10,4 @@ types-passlib
 types-python-jose
 
 # linting — keep in sync with ci.yml pin
-ruff==0.11.2
+ruff==0.15.6
