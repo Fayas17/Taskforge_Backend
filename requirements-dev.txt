@@ -1,0 +1,13 @@
+# test runner
+pytest==8.3.5
+pytest-asyncio==1.3.0
+anyio==4.12.1
+httpx==0.28.1
+
+# type checking
+mypy==1.13.0
+types-passlib
+types-python-jose
+
+# linting — keep in sync with .pre-commit-config.yaml rev
+ruff==0.15.6

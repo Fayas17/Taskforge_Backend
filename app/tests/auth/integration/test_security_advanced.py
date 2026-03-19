@@ -61,6 +61,6 @@ async def test_jwt_invalid_signature(client: httpx.AsyncClient) -> None:
     client.cookies.set("access_token", tampered_token)
 
     response = await client.get("/auth/me/")
-    assert (
-        response.status_code == 401
-    ), "Backend must reject forged payloads with invalid signatures"
+    assert response.status_code == 401, (
+        "Backend must reject forged payloads with invalid signatures"
+    )
