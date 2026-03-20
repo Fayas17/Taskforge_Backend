@@ -1,0 +1,60 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "S",   # flake8-bandit (security)
+    "T20", # flake8-print (no stray print statements)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101",  # assert used — fine in tests
+    "S105",  # hardcoded password — false positives on variable names
+    "S106",  # hardcoded password in function args
+    "B008",  # do not perform function calls in default args — FastAPI Depends() pattern
+    "N805",  # first argument of a method should be named 'self' — false positives with Pydantic validators
+]
+
+[tool.ruff.lint.per-file-ignores]
+"app/tests/**" = ["S", "T20"]  # disable security and print checks in tests
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+ignore_missing_imports = true
+explicit_package_bases = true
+plugins = ["pydantic.mypy"]
+
+# mypy exclude uses regex patterns (not globs)
+exclude = [
+    "^alembic/",
+    "^app/tests/",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["app/tests"]
+pythonpath = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
