@@ -5,6 +5,7 @@ import app.job_service.models
 
 app = FastAPI(title="TaskForge")
 
+
 @app.on_event("startup")
 def startup():
     create_schemas()
