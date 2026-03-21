@@ -1,15 +1,14 @@
+import httpx
+
 from app.core.rate_limiter import limiter
 
 
-def test_rate_limiter_blocks_requests(client):
+async def test_rate_limiter_blocks_requests(client: httpx.AsyncClient) -> None:
     limiter.enabled = True
 
-    # Send a burst of requests to trigger rate limiting
-    # Assume the limit is small like "5/minute", but let's test defensively
     status_codes = []
-
     for _ in range(50):
-        response = client.post(
+        response = await client.post(
             "/auth/login/",
             json={"email": "rate_limit_test@example.com", "password": "wrong_password"},
         )
@@ -17,9 +16,9 @@ def test_rate_limiter_blocks_requests(client):
         if response.status_code == 429:
             break
 
-    msg = (
-        "Rate limiter did not block excessive requests. Ensure REDIS is running and limits are set."
-    )
-    assert 429 in status_codes, msg
-
     limiter.enabled = False
+
+    assert 429 in status_codes, (
+        "Rate limiter did not block excessive requests. "
+        "Ensure REDIS is running and limits are set."
+    )
