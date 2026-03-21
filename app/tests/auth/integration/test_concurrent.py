@@ -1,11 +1,13 @@
-import uuid
-import pytest
 import concurrent.futures
+import uuid
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import app
 
 # Skip this entire file to prevent Docker freezes
 pytestmark = pytest.mark.skip(reason="Concurrency tests cause deadlocks in TestClient")
-from fastapi.testclient import TestClient
-from app.main import app
 
 
 @pytest.mark.skip(reason="TestClient concurrency limitation")
@@ -27,10 +29,7 @@ def test_race_condition_registration():
             return None
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [
-            executor.submit(register_user, f"user_{i}")
-            for i in range(5)
-        ]
+        futures = [executor.submit(register_user, f"user_{i}") for i in range(5)]
 
         results = []
         for f in futures:
