@@ -1,10 +1,11 @@
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
 from functools import lru_cache
+from typing import Literal
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
         extra="ignore",
@@ -50,16 +51,26 @@ class Settings(BaseSettings):
     # Cookies
     COOKIE_SECURE: bool
     HTTP_ONLY: bool
-    COOKIE_SAMESITE: str
+    COOKIE_SAMESITE: Literal["lax", "strict", "none"]
     ACCESS_TOKEN_COOKIE_MAX_AGE: int
-    REFRESH_TOKEN_COOKIE_MAX_AGE: int 
+    REFRESH_TOKEN_COOKIE_MAX_AGE: int
 
     # GOOGLE OAuth
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
 
     @property
-    def DATABASE_URL(self):
+    def database_url(self) -> str:
+        """Async database URL (asyncpg driver) — used by the application."""
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
+            f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
+    @property
+    def sync_database_url(self) -> str:
+        """Sync database URL (psycopg2 driver) — used by Alembic migrations only."""
         return (
             f"postgresql+psycopg2://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
@@ -67,8 +78,8 @@ class Settings(BaseSettings):
         )
 
 
-@lru_cache()
-def get_settings():
+@lru_cache
+def get_settings() -> Settings:
     return Settings()
 
 
