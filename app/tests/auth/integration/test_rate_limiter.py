@@ -18,7 +18,6 @@ async def test_rate_limiter_blocks_requests(client: httpx.AsyncClient) -> None:
 
     limiter.enabled = False
 
-    assert 429 in status_codes, (
-        "Rate limiter did not block excessive requests. "
-        "Ensure REDIS is running and limits are set."
-    )
+    assert (
+        429 in status_codes
+    ), "Rate limiter did not block excessive requests. Ensure REDIS is running and limits are set."
