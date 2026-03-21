@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       # pin ruff — it moves fast and minor versions break rules
-      - run: pip install "ruff==0.11.2"
+      - run: pip install "ruff==0.15.6"
 
       - name: Format check
         run: ruff format --check .
@@ -76,7 +76,10 @@ jobs:
 
       # only scanning prod deps — dev tools don't ship to production
       - name: Audit
-        run: pip-audit -r requirements.txt
+        # CVE-2024-23342: ecdsa weak key generation — inherited from python-jose.
+        # Tracked in: https://github.com/mpdavis/python-jose/issues/345
+        # Fix: migrate to python-jose[cryptography] (no ecdsa dep). Ignored until migration.
+        run: pip-audit -r requirements.txt --ignore-vuln CVE-2024-23342
 
 
   test:
