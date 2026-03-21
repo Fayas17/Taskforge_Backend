@@ -1,0 +1,22 @@
+{
+  "recommendations": [
+    // Python language support
+    "ms-python.python",
+    // Type checking and IntelliSense (Pylance)
+    "ms-python.vscode-pylance",
+    // Ruff: linting + formatting (replaces flake8 + black + isort extensions)
+    "charliermarsh.ruff",
+    // Docker support for docker-compose.yml and Dockerfile
+    "ms-azuretools.vscode-docker",
+    // YAML support for pre-commit config, docker-compose
+    "redhat.vscode-yaml",
+    // TOML support for pyproject.toml
+    "tamasfe.even-better-toml",
+    // GitLens for inline git blame and history
+    "eamodio.gitlens",
+    // REST client for testing API endpoints directly in VS Code
+    "humao.rest-client",
+    // Indent rainbow: makes nested code easier to read
+    "oderwat.indent-rainbow"
+  ]
+}

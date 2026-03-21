@@ -4,6 +4,7 @@ uvicorn==0.41.0
 SQLAlchemy==2.0.46
 psycopg2-binary==2.9.11
 asyncpg==0.31.0
+email-validator
 
 pydantic==2.12.5
 pydantic-settings==2.13.1
@@ -15,3 +16,18 @@ python-jose==3.5.0
 passlib==1.7.4
 
 python-dotenv==1.2.1
+
+pytest
+pytest-asyncio
+httpx
+
+authlib
+
+itsdangerous
+alembic
+
+slowapi
+
+redis
+
+structlog
