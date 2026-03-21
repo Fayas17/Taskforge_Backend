@@ -5,7 +5,6 @@ from sqlalchemy.sql import func
 from app.core.database import Base
 
 
-
 class User(Base):
     __tablename__ = "users"
     __table_args__ = {"schema": "auth"}

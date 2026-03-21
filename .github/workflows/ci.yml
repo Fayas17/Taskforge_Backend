@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches-ignore: [master]  # master only gets clean code via merged PRs
   pull_request:
     branches: [master]
   workflow_dispatch:
