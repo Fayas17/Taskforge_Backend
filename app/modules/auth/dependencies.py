@@ -30,7 +30,7 @@ async def get_current_user(request: Request, db: AsyncSession = Depends(get_db))
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type"
             )
-        user_id: str = payload.get("sub")
+        user_id: str | None = payload.get("sub")
         if user_id is None:
             logger.warning("token_missing_user_id", ip_address=ip)
             raise HTTPException(

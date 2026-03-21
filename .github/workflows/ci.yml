@@ -153,10 +153,11 @@ jobs:
       ACCESS_TOKEN_COOKIE_MAX_AGE: "900"
       REFRESH_TOKEN_COOKIE_MAX_AGE: "604800"
 
-      # conftest.py disables rate limiting; these just satisfy the config validator
-      RATE_LIMIT_REGISTER: 100/minute
-      RATE_LIMIT_LOGIN: 100/minute
-      RATE_LIMIT_REFRESH: 100/minute
+      # conftest.py disables limiting globally — only the rate limiter test
+      # re-enables it, so tight limits here don't affect other tests
+      RATE_LIMIT_REGISTER: 3/minute
+      RATE_LIMIT_LOGIN: 5/minute
+      RATE_LIMIT_REFRESH: 10/minute
 
     steps:
       - uses: actions/checkout@v4
