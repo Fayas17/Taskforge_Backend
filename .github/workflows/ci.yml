@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']  
+    branches: ['**']
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -79,7 +79,9 @@ jobs:
         # CVE-2024-23342: ecdsa weak key generation — inherited from python-jose.
         # Tracked in: https://github.com/mpdavis/python-jose/issues/345
         # Fix: migrate to python-jose[cryptography] (no ecdsa dep). Ignored until migration.
-        run: pip-audit -r requirements.txt --ignore-vuln CVE-2024-23342
+        # CVE-2026-4539: pygments vulnerability — transitive dependency, no fix version available yet.
+        # Ignored until upstream releases a patched version.
+        run: pip-audit -r requirements.txt --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2026-4539
 
 
   test:
