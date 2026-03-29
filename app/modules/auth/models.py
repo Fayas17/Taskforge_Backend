@@ -31,6 +31,7 @@ class User(Base):
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
+    __table_args__: ClassVar[dict] = {"schema": "auth"}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[uuid.UUID | None] = mapped_column(

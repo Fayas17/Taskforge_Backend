@@ -9,7 +9,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import get_settings
-from app.core.database import Base, create_schemas, engine
+from app.core.database import create_schemas, engine
 from app.core.logging import setup_logging
 from app.core.rate_limiter import limiter
 from app.middleware.request_logger import RequestLoggingMiddleware
@@ -25,8 +25,6 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await create_schemas()
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     await engine.dispose()
 
